@@ -1,3 +1,4 @@
+
 package com.shuab;
 
 import com.shuab.booking.CarBooking;
@@ -14,10 +15,11 @@ import java.util.Scanner;
 import java.util.UUID;
 
 public class CarBookingSystem {
-    private static final Scanner scanner = new Scanner(System.in);
-    private static final CarBookingService carBookingService = new CarBookingService();
-    private static final CarService carService = new CarService();
-    private static final UserService userService = new UserService();
+    // let us use the Scanner as field of the class, to apply for the utility methods later.
+    private final Scanner scanner = new Scanner(System.in);
+    private final CarBookingService carBookingService = new CarBookingService();
+    private final CarService carService = new CarService();
+    private final UserService userService = new UserService();
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     public void run() {
@@ -33,7 +35,7 @@ public class CarBookingSystem {
                     case 1 -> book();
                     case 2 -> delete();
                     case 3 -> viewUserBookedCars();
-                    case 4 -> viewBookings(); //viewBookings().length == 0 ? "No Booking is available\n" :
+                    case 4 -> viewBookings();
                     case 5 -> view(carService.getAvailableCars(carBookingService.getBookings()),
                             "There are no cars available");
                     case 6 -> view(carService.getAvailableElectricCars(carBookingService.getBookings()),
@@ -47,33 +49,46 @@ public class CarBookingSystem {
                     default -> System.out.println("Invalid choice😡 Please select from the below menu👇\n");
                 }
             } catch (Exception e) {
-                System.out.println(e.getMessage());
-                System.out.println();
+                displayError(e.getMessage());
             }
 
         }
     }
 
-    private static void viewBookings() {
+    private void displayError(String message) {
+        System.out.println(message);
+        System.out.println();
+    }
+
+    private void viewBookings() {
         view(carBookingService.getBookings(),
                 "There is no booking available");
     }
 
-    private static void viewAllUsers() {
+    private void viewAllUsers() {
         view(userService.getUsers(), "No users are registered");
     }
 
-    private static int getOption() {
-        String input = scanner.nextLine().trim();
+    private int getOption() {
+        int option = -1;
+        boolean valid = false;
 
-        try {
-            return Integer.parseInt(input);
-        } catch (NumberFormatException e) {
-            return -1;
-        }
+        do {
+            String input = scanner.nextLine().trim();
+
+            try {
+                option = Integer.parseInt(input);
+                valid = true;
+            } catch (NumberFormatException e) {
+                displayError("Invalid choice😡 Please select from the above menu☝️");
+                System.out.print("Please select from the menu: ");
+            }
+        } while (!valid);
+
+        return option;
     }
 
-    private static void displayMenu() {
+    private void displayMenu() {
         // main menu
         System.out.println("1️⃣ - Book Car");
         System.out.println("2️⃣ - Delete Booking");
@@ -87,7 +102,7 @@ public class CarBookingSystem {
         System.out.print("Please select from the menu: ");
     }
 
-    private static boolean view(Object[] items, String message) {
+    private boolean view(Object[] items, String message) {
         if (items == null || items.length == 0) {
             System.out.println(message);
             System.out.println();
@@ -101,79 +116,183 @@ public class CarBookingSystem {
         return true;
     }
 
-    private static void delete() {
+    private void delete() {
         if (!view(carBookingService.getBookings(),
                 "No bookings are available to be deleted")) return;
 
-        UUID id = askId("Please select a booking ID: ");
+        boolean deleted = false;
 
-        carBookingService.deleteBooking(id);
-        System.out.println("Deletion successful!");
-        System.out.println();
+        do {
+            UUID id = askId("Please select a booking ID: ");
+
+            try {
+                carBookingService.deleteBooking(id);
+                System.out.println("Deletion successful!");
+                System.out.println();
+                deleted = true;
+
+            } catch (IllegalArgumentException e) {
+                displayError(e.getMessage());
+            }
+        } while (!deleted);
     }
 
-    private static void viewUserBookedCars() {
-        if (!view(carBookingService.getBookings(),
-                "No bookings are available")) return;
+    private void viewUserBookedCars() {
+        if (!view(carBookingService.getBookings(), "No bookings are available")
+            || !view(userService.getUsers(), "No users available")) return;
 
-        view(userService.getUsers(), "No users available");
-        UUID id = askId("➡️ select user id: ");
+        UUID id = askUserId("➡️ select user id: ");
         User user = userService.getUserById(id);
         Car[] userBookedCars = carBookingService.getUserBookedCars(id);
 
         view(userBookedCars, "🙅‍♂️No cars are booked by %s. \n".formatted(user.getName()));
-
     }
 
-    private static void book() {
-        CarBooking[] bookings = carBookingService.getBookings();
-        Car[] cars = carService.getAvailableCars(bookings);
-        if (!view(cars, "No cars are available for booking")) return;
+    private void book() {
+        UUID carId = askAvailableCarId();
 
-        UUID carId = askId("➡️ enter car id: ");
+        if (carId == null || !view(userService.getUsers(), "No users are registered")) return;
 
-        // TODO: check if the car is already been booked before continuing further...
-        carBookingService.checkIfTheCarWasBooked(carId);
-
-        viewAllUsers();
-        UUID userId = askId("➡️ enter user id: ");
-        LocalDate startDate = askDate("enter start date (day-month-year): ");
-        LocalDate endDate = askDate("enter end date (day-month-year): ");
-
+        UUID userId = askUserId("➡️ enter user id: ");
+        LocalDate startDate = askStartDate();
+        LocalDate endDate = askEndDate(startDate);
 
         CarBooking booking = carBookingService.bookCar(userId, carId, startDate, endDate);
         System.out.println(displayBookingDetails(booking));
-
-
     }
 
-    private static String displayBookingDetails(CarBooking booking) {
+    private UUID askAvailableCarId() {
+        UUID carId;
+        boolean valid;
+
+        do {
+            CarBooking[] bookings = carBookingService.getBookings();
+            Car[] cars = carService.getAvailableCars(bookings);
+
+            if (!view(cars, "No cars are available for booking")) return null;
+
+            carId = askId("➡️ enter car id: ");
+
+            try {
+                carService.getCarById(carId);
+                carBookingService.checkIfTheCarWasBooked(carId);
+                valid = true;
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                displayError(e.getMessage());
+                valid = false;
+            }
+
+        } while (!valid);
+
+        return carId;
+    }
+
+    private UUID askUserId(String message) {
+        UUID id;
+        boolean valid;
+
+        do {
+            id = askId(message);
+
+            try {
+                userService.getUserById(id);
+                valid = true;
+            } catch (IllegalArgumentException e) {
+                displayError(e.getMessage());
+                valid = false;
+            }
+
+        } while (!valid);
+
+        return id;
+    }
+
+    private LocalDate askStartDate() {
+        LocalDate startDate;
+        boolean valid;
+
+        do {
+            startDate = askDate("enter start date (day-month-year): ");
+
+            try {
+                carBookingService.validateStartDate(startDate);
+                valid = true;
+            } catch (IllegalArgumentException e) {
+                displayError(e.getMessage());
+                valid = false;
+            }
+
+        } while (!valid);
+
+        return startDate;
+    }
+
+    private LocalDate askEndDate(LocalDate startDate) {
+        LocalDate endDate;
+        boolean valid;
+
+        do {
+            endDate = askDate("enter end date (day-month-year): ");
+
+            try {
+                carBookingService.validateEndDate(startDate, endDate);
+                valid = true;
+            } catch (IllegalArgumentException e) {
+                displayError(e.getMessage());
+                valid = false;
+            }
+
+        } while (!valid);
+
+        return endDate;
+    }
+
+    private String displayBookingDetails(CarBooking booking) {
         return booking.getUser().getName() +
                "🎇 successfully booked a car, below is the booking details: " +
                "\n\tRef Id: " + booking.getId() +
+               "\n\tBooking Cost: " + booking.getPrice() +
                "\n\tUser info: " + booking.getUser() +
                "\n\tCar info: " + booking.getCar() + '\n';
     }
 
-    private static LocalDate askDate(String message) {
-        System.out.print(message);
-        String input = scanner.nextLine().trim();
+    private LocalDate askDate(String message) {
+        LocalDate date = null;
+        boolean valid = false;
 
-        try {
-            return LocalDate.parse(input, FORMATTER);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Please enter a valid date format👎");
-        }
+        do {
+            System.out.print(message);
+            String input = scanner.nextLine().trim();
+
+            try {
+                date = LocalDate.parse(input, FORMATTER);
+                valid = true;
+            } catch (DateTimeParseException e) {
+                displayError("Please enter a valid date i.e. [23-11-2026]");
+            }
+
+        } while (!valid);
+
+        return date;
     }
 
-    private static UUID askId(String message) {
-        System.out.print(message);
-        String input = scanner.nextLine().trim();
+    private UUID askId(String message) {
+        UUID id = null;
+        boolean valid = false;
 
-        try {
-            return UUID.fromString(input);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Please enter a valid ID👎");
-        }
+        do {
+            System.out.print(message);
+            String input = scanner.nextLine().trim();
+
+            try {
+                id = UUID.fromString(input);
+                valid = true;
+            } catch (IllegalArgumentException e) {
+                displayError("Please enter a valid ID👎");
+            }
+
+        } while (!valid);
+
+        return id;
     }
 }
