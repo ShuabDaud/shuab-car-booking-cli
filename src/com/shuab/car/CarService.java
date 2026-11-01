@@ -31,26 +31,18 @@ public class CarService {
         return car;
     }
 
-    // get all available cars
     public Car[] getAvailableCars(CarBooking[] bookings) {
-        // obtain all cars
         Car[] cars = getCars();
-        // obtain current bookings
         CarBooking[] carBookings = bookings == null
                 ? new CarBooking[0]
                 : bookings;
-        // create an empty array for the available cars
         Car[] availableCars = new Car[cars.length];
         int counter = 0;
 
-        // for each car,
         for (Car car : cars) {
             boolean booked = false;
 
-            // we will check every booking
-            // TODO: if booking is not null, then we can loop... I will try this later.
             for (CarBooking booking : carBookings) {
-                // skip any null slot for the bookings array
                 if (booking == null)
                     continue;
 
@@ -60,7 +52,6 @@ public class CarService {
                     break;
                 }
             }
-            // after inner loop breaks, continue the body of the outer loop
             if (!booked) {
                 availableCars[counter++] = car;
             }
@@ -70,13 +61,11 @@ public class CarService {
         return Arrays.copyOf(availableCars, counter); // to not display unused slots
     }
 
-    // get available electric cars
     public Car[] getAvailableElectricCars(CarBooking[] bookings) {
         Car[] availableCars = getAvailableCars(bookings);
         Car[] electricCars = new Car[availableCars.length];
         int counter = 0;
 
-        // for each available car, if it's electric, add to the array, and increment the counter.
         for (Car car : availableCars) {
             if (car.isElectric())
                 electricCars[counter++] = car;
@@ -85,20 +74,3 @@ public class CarService {
         return Arrays.copyOf(electricCars, counter);
     }
 }
-
-/*
-class Test3 {
-    static void main() {
-        CarService service = new CarService();
-
-        System.out.println(Arrays.toString(service.getCars()));
-
-        try {
-            System.out.println(service.getCarById(
-                    null));
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-    }
-}
-*/

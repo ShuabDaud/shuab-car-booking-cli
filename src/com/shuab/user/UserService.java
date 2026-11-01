@@ -1,6 +1,5 @@
 package com.shuab.user;
 
-import java.util.Arrays;
 import java.util.UUID;
 
 public class UserService {
@@ -10,12 +9,10 @@ public class UserService {
         this.userDao = new UserDao();
     }
 
-    // get all users
     public User[] getUsers() {
         return userDao.getUsers();
     }
 
-    // get a user by id
     public User getUserById(UUID id) {
         // 1. we handle if id is null
         if (id == null) throw new IllegalArgumentException("User id cannot be null");
