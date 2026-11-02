@@ -45,26 +45,19 @@ public class CarBookingService {
         User user = userService.getUserById(id);
         if (user == null) throw new IllegalArgumentException("User not found");
 
-        // get the existing booking
         CarBooking[] bookings = getBookings();
 
-        // the user cannot have more booked cars than we have in the booking list
         Car[] bookedCars = new Car[bookings.length];
         int counter = 0;
 
-        // we examine every booking in the bookings array
         for (CarBooking booking : bookings) {
-            // we skip every empty cell which holds null.
             if (booking == null) continue;
-            // if that is not that case, we try to extract the user from the booking.
             User bookingUser = booking.getUser();
 
-            // then we check if the booking belongs to that extracted user
             if (bookingUser != null &&
                 booking.getStatus().equals(BookingStatus.ACTIVE) &&
                 bookingUser.getId().equals(id)) {
 
-                // then we extract that car from the booking and add to the array
                 bookedCars[counter++] = booking.getCar();
             }
         }
@@ -96,7 +89,9 @@ public class CarBookingService {
 //                ? 1 // duration of the rental will 1 day if these date are equal
 //                : startDate.until(endDate).getDays();
 
-        long days = ChronoUnit.DAYS.between(startDate, endDate);
+        long days = startDate.equals(endDate)
+                ? 1
+                : ChronoUnit.DAYS.between(startDate, endDate);
 
         BigDecimal price = car.getRentalPricePerDay()
                 .multiply(BigDecimal.valueOf(days));
@@ -126,6 +121,7 @@ public class CarBookingService {
                 throw new IllegalArgumentException("This car has already been booked");
         }
     }
+
     public void validateStartDate(LocalDate startDate) {
         if (startDate.isBefore(LocalDate.now())) {
             throw new IllegalArgumentException(
@@ -150,84 +146,4 @@ public class CarBookingService {
         carBookingDao.deleteBooking(id);
     }
 }
-
-/*class Testing {
-    static CarBookingService dao = new CarBookingService();
-    static UserService daoUser = new UserService();
-    static CarService daoCar = new CarService();
-
-    static void main() {
-
-        displayBooking(dao);
-
-        saveBooking(dao);
-
-
-        displayBooking(dao);
-
-
-        find(UUID.fromString("009394dc-b88e-4e17-8e91-4e8f755c7e3a"));
-
-        delete(UUID.fromString("009394dc-b88e-4e17-8e91-4e8f755c7e3a"));
-        delete(UUID.fromString("111194dc-b88e-4e17-8e91-4e8f755c4444"));
-        delete(UUID.fromString("111194dc-b88e-4e17-8e91-4e8f755c4444"));
-
-//        find(UUID.fromString("b7375ddf-9434-4062-90bf-ccefb3470e48"));
-
-    }
-
-    private static void find(UUID id) {
-        try {
-            System.out.println(dao.findBookingById(id) + "\n");
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            System.out.println();
-        }
-    }
-
-    private static void delete(UUID id) {
-        try {
-            dao.deleteBooking(id);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            System.out.println();
-        }
-    }
-
-    private static void displayBooking(CarBookingService dao) {
-        System.out.println("**********************************");
-        System.out.println("Count: " + dao.getCounter() + '\n' +
-                           "Array: " + Arrays.toString(dao.getBookings()));
-        System.out.println("**********************************\n");
-    }
-
-    private static void saveBooking(CarBookingService dao) {
-        try {
-            dao.bookCar(
-                    UUID.fromString("009394dc-b88e-4e17-8e91-4e8f755c7e3a"),
-                    UUID.fromString("8ca51d2b-aaaf-4bf2-834a-e02964e10fc3"),
-                    UUID.fromString("8ca51b2b-aaaf-4bc2-834a-e02964e10cc3"),
-                    LocalDate.now(),
-                    LocalDate.now()
-            );
-            dao.bookCar(
-                    UUID.fromString("111194dc-b88e-4e17-8e91-4e8f755c4444"),
-                    UUID.fromString("b10d126a-3608-4980-9f9c-aa179f5cebc3"),
-                    UUID.fromString("74bc9588-780d-4877-ae7e-a7e45bb33fde"),
-                    LocalDate.now(),
-                    LocalDate.now()
-            );
-            dao.bookCar(
-                    UUID.fromString("111194dc-b88e-4e17-8e91-4e8f755c4444"),
-                    UUID.fromString("b10d126a-3608-4980-9f9c-aa179f5cebc3"),
-                    UUID.fromString("74bc9588-780d-4877-ae7e-a7e45bb33fde"),
-                    LocalDate.now(),
-                    LocalDate.now()
-            );
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            System.out.println();
-        }
-    }
-}*/
 
