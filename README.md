@@ -834,7 +834,7 @@ File file = new File("src/com/amigoscode/users.csv");
 
 // After - loads from classpath (src/main/resources/)
 File file = new File(
-    getClass().getClassLoader().getResource("users.csv").getPath()
+        getClass().getClassLoader().getResource("com/shuab/users.csv").getPath()
 );
 ```
 

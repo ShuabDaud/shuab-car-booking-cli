@@ -2,12 +2,19 @@
 package com.shuab;
 
 import com.shuab.booking.CarBooking;
+import com.shuab.booking.CarBookingDao;
+import com.shuab.booking.CarBookingFileDataAccessService;
 import com.shuab.booking.CarBookingService;
 import com.shuab.car.Car;
+import com.shuab.car.CarDao;
+import com.shuab.car.CarFileDataAccessService;
 import com.shuab.car.CarService;
 import com.shuab.user.User;
+import com.shuab.user.UserDao;
+import com.shuab.user.UserFileDataAccessService;
 import com.shuab.user.UserService;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -15,12 +22,26 @@ import java.util.Scanner;
 import java.util.UUID;
 
 public class CarBookingSystem {
-    // let us use the Scanner as field of the class, to apply for the utility methods later.
+    private final String path = "src" + "/com/shuab/";
+    // dependencies
+    private final UserDao userDao = new UserFileDataAccessService(path + "users.dat");
+    private final CarDao carDao = new CarFileDataAccessService(
+            path + "cars.csv",
+            path + "cars.dat");
+    private final CarBookingDao carBookingDao =
+            new CarBookingFileDataAccessService(path + "bookings.dat");
+
+    private final UserService userService = new UserService(userDao);
+    private final CarService carService = new CarService(carDao);
+    private final CarBookingService carBookingService =
+            new CarBookingService(carBookingDao, userService, carService);
+
     private final Scanner scanner = new Scanner(System.in);
-    private final CarBookingService carBookingService = new CarBookingService();
-    private final CarService carService = new CarService();
-    private final UserService userService = new UserService();
+
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+    public CarBookingSystem() throws IOException {
+    }
 
     public void run() {
         boolean keepRunning = true;
