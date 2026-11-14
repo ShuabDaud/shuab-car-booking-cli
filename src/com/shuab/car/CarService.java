@@ -3,15 +3,17 @@ package com.shuab.car;
 import com.shuab.booking.BookingStatus;
 import com.shuab.booking.CarBooking;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
 
 public class CarService {
     private final CarDao carDao;
+//    private CarArrayDataAccessService carDao;
 
 
-    public CarService() {
-        this.carDao = new CarDao();
+    public CarService(CarDao carDao) {
+        this.carDao = carDao;
     }
 
     // get all cars

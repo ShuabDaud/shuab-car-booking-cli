@@ -1,0 +1,5 @@
+id,registrationNumber,price,brand,available
+8ca51b2b-aaaf-4bc2-834a-e02964e10cc3,1234,89,TESLA,true
+74bc9588-780d-4877-ae7e-a7e45bb33fde,5678,50,AUDI,false
+65b2d699-a7b6-4e56-a972-38de6d0c94c4,9101,67,TOYOTA,false
+65b2d699-a7b6-4e56-a972-38de6d0b94c5,1299,88,BMW,true

@@ -1,15 +1,19 @@
 package com.shuab.user;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.UUID;
 
 public class UserService {
     private final UserDao userDao;
 
-    public UserService() {
-        this.userDao = new UserDao();
+    public UserService(UserDao userDao) {
+        this.userDao = userDao;
     }
 
     public User[] getUsers() {
+        if (userDao == null)
+            throw new IllegalArgumentException("No users found!");
         return userDao.getUsers();
     }
 

@@ -17,11 +17,12 @@ public class CarBookingService {
     private final UserService userService;
     private final CarService carService;
 
-    public CarBookingService() {
-        this.carBookingDao = new CarBookingDao();
-        this.userService = new UserService();
-        this.carService = new CarService();
-
+    public CarBookingService(CarBookingDao carBookingDao,
+                             UserService userService,
+                             CarService carService) {
+        this.carBookingDao = carBookingDao;
+        this.userService = userService;
+        this.carService = carService;
     }
 
     public CarBooking[] getBookings() {

@@ -3,13 +3,14 @@ package com.shuab.booking;
 import com.shuab.car.Car;
 import com.shuab.user.User;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-public class CarBooking {
+public class CarBooking implements Serializable {
     private UUID id;
     private User user;
     private Car car;
